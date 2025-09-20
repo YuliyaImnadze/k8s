@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:                         # Метаданные объекта
+  name: nginx-deployment
+  namespace: homework
+  labels:                         # Метки
+    app: nginx
+spec:                             # Спецификация Deployment
+  replicas: 1                     # Количество реплик
+  selector:
+    matchLabels:
+      app: nginx                  # Должен совпадать с label - template.metadata.labels
+  strategy:                       # Стратегия обновления Pod
+    type: RollingUpdate           # Обновление без простоя
+    rollingUpdate:
+      maxUnavailable: 0           # Количество Pod, которые могут быть недоступны во время обновления
+      maxSurge: 1                 # Допустимое количество Pod сверх replicas во время обновления
+  template:
+    metadata:                     # Метаданные для создаваемых Pod
+      labels:
+        app: nginx
+    spec:
+      containers:                 # Список контейнеров внутри Pod'а
+        - name: nginx             # Имя контейнера
+          image: nginx:1.25.5     # Образ контейнера
+          ports:
+            - containerPort: 80

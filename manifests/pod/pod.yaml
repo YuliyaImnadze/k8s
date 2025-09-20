@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:                      # Метаданные объекта
+  name: nginx-pod             # Имя пода
+  namespace: homework         # Namespace, в котором будет создан под
+  labels:                     # Метки для идентификации
+    app: nginx-pod
+spec:
+  containers:                 # Список контейнеров внутри пода
+    - name: nginx             # Имя контейнера
+      image: nginx:1.25.5     # Образ контейнера
+      ports:
+        - containerPort: 80
+      resources:
+        requests:             # Минимально гарантированные ресурсы
+          cpu: "100m"
+          memory: "128Mi"
+        limits:               # Максимально доступные ресурсы
+          cpu: "500m"
+          memory: "256Mi"
+  restartPolicy: Always        # Политика рестарта контейнера
