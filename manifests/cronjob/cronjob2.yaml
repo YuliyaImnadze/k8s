@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: text-cron
+spec:
+  schedule: "*/2 * * * *"           # каждые 2 минуты
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: say
+              image: busybox:stable
+              command: ["sh","-c","echo 'Some text' from $(hostname)"]

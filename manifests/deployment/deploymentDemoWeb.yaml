@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-web
+  namespace: storage-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-web
+  template:
+    metadata:
+      labels:
+        app: demo-web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: web
+              mountPath: /usr/share/nginx/html
+        - name: writer
+          image: busybox:1.36
+          envFrom:
+            - configMapRef:
+                name: app-config-map
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data
+              while true; do
+                echo "$(date '+%F %T') — color=$APP_COLOR" >> /data/index.html
+                sleep 5
+              done
+          volumeMounts:
+            - name: web
+              mountPath: /data
+      volumes:
+        - name: web
+          persistentVolumeClaim:
+            claimName: pvc-demo-web
