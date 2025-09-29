@@ -1,0 +1,89 @@
+stages:
+  - stage_build
+  - stage_test
+  - stage_deploy_dev
+  - stage_deploy_prd
+
+variables:
+  LOG_FILE_NAME: "log.txt"
+
+build_job:
+  stage: stage_build
+  script:
+    - 'printf "" > "${LOG_FILE_NAME}"'
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
+
+test_job1:
+  stage: stage_test
+  needs:
+    - job: build_job
+      artifacts: true
+  script:
+    - test -f "${LOG_FILE_NAME}"
+    - echo "test_job1" | tee -a "${LOG_FILE_NAME}"
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
+
+test_job2:
+  stage: stage_test
+  needs:
+    - job: test_job1
+      artifacts: true
+  script:
+    - test -f "${LOG_FILE_NAME}"
+    - echo "test_job2" | tee -a "${LOG_FILE_NAME}"
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
+
+test_job3:
+  stage: stage_test
+  needs:
+    - job: test_job2
+      artifacts: true
+  script:
+    - test -f "${LOG_FILE_NAME}"
+    - echo "test_job3" | tee -a "${LOG_FILE_NAME}"
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
+
+deploy_to_dev_job:
+  stage: stage_deploy_dev
+  needs:
+    - job: test_job3
+      artifacts: true
+  script:
+    - test -f "${LOG_FILE_NAME}"
+    - echo "---Deploy to DEV Started---"   | tee -a "${LOG_FILE_NAME}"
+    - echo "Deploying to DEV..."           | tee -a "${LOG_FILE_NAME}"
+    - echo "---Deploy to DEV Completed---" | tee -a "${LOG_FILE_NAME}"
+    - echo "========= MERGED LOG (DEV) ========="
+    - wc -c "${LOG_FILE_NAME}" | awk '{print "size(bytes):",$1}'
+    - cat -n "${LOG_FILE_NAME}"
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
+
+deploy_to_prd_job:
+  stage: stage_deploy_prd
+  resource_group: production
+  needs:
+    - job: deploy_to_dev_job
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH=="main"'
+      when: manual
+      allow_failure: false
+    - when: never
+  script:
+    - test -f "${LOG_FILE_NAME}"
+    - echo "---Deploy to PRD Started---"   | tee -a "${LOG_FILE_NAME}"
+    - echo "Deploying to PRD..."           | tee -a "${LOG_FILE_NAME}"
+    - echo "---Deploy to PRD Completed---" | tee -a "${LOG_FILE_NAME}"
+  artifacts:
+    paths:
+      - "${LOG_FILE_NAME}"
